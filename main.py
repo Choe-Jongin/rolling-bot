@@ -6,27 +6,38 @@ from text import PRND
 
 #module
 from bot import Bot
+from kbmanager import KM
+import keyboard
 
 #program
 import os
 import time
 import math
 import threading
+
 FPS = 20
 
 class Main:
+    
+    #프로그램 구성 요소 
     name="ROLLING  BOT"     #프로그램 이름(*짝수길이)
     state = 0           #메인루프 동작 상태(0:정상, -1:종료)
     start = 0           #프로그램 시작시간
     time = 0            #프로그램 동작시간
     
+    #로봇 관련
     bot = Bot("TEAM 3 BOT")
     
     velo = 0
     velobuff = 0
 
     #프로그램 시작 지점
+    @staticmethod
     def entry():
+        
+        #setting
+        KM.set_key_list(['up','down','left','right','esc','q', 'shift'])
+        
         try:
             print('start raspi')
             
@@ -37,7 +48,6 @@ class Main:
             #start main loop
             Main.loop()
             Main.state = -1
-            
         except KeyboardInterrupt:   #키보드로 강제 종료시 진입(ctrl + C)
             print("exit")
         finally:                    #정상/비정상 프로그램 종료 시 처리
@@ -45,27 +55,42 @@ class Main:
             print("clean main")
     
     #메인루프
+    @staticmethod
     def loop():
         
-        time.sleep(600)
-    
+        run = 1
+        while run == 1:
+            KM.update()
+            Main.bot.update()
+            if KM.is_down('up'):
+                Main.bot.up_acc(0.5)
+            else :
+                Main.bot.up_acc(-3)
+                
+            if KM.is_press('shift'):
+                Main.bot.gear_select('down')
+                
+            if KM.is_down('esc'):
+                run = 0
+            time.sleep(0.1)
+                    
     #**********    UI    *************
     
     #화면 지우기
+    @staticmethod
     def clear():
         if os.name.split()[0] == "nt":
-            os.system('cls')                #윈두우
+            os.system('cls')                #윈도우
         else :
             os.system('clear')              #리눅스/유닉스
     
     #UI의 메인루프
+    @staticmethod
     def update():
-        print('start ui')
         Main.start = time.time()
         elaps = Main.start
         Main.time = 0
         curr = 0
-        gear = 0
         
         while Main.state != -1:
             #흐르는 시간 측정
@@ -79,22 +104,16 @@ class Main:
                 curr -= 1/FPS
                 Main.clear()
                 Main.show_window()
-                
-                if Main.velobuff < 5:
-                    Main.velo = 150
-                if Main.velobuff > 149 :
-                    Main.velo = 0
-                    Main.bot.gear_select("down")
                     
-                Main.velobuff += (Main.velo - Main.velobuff)/9
+                Main.velobuff += (Main.bot.get_vel() - Main.velobuff)/3
                 Main.niddle_gauge(160+Main.velobuff, 30, 20, 15)
                 
                 #velocity
                 print(Main.buff)
                 print(' '*12, int(Main.velobuff),"cm/s")
             
-                
     #UI표시
+    @staticmethod
     def show_window():
         W = 70
         T = str(int(Main.time))+'s'+' '*(5-len(str(int(Main.time))))
@@ -151,15 +170,6 @@ class Main:
             if x < 0 or y < 0 or x > W or y > H :
                 continue 
             Main.idea[int(y)][int(x)] = 1
-
-        #안티 앨리어싱
-        # for i in range(2, H-2, 2):
-        #     for j in range(1, W-1, 1):
-        #         if Main.idea[i][j] == 0 and Main.idea[i+1][j] == 0:
-        #             if Main.idea[i-2][j] == 1 and Main.idea[i-1][j] == 1 and Main.idea[i][j-1] == 1 and Main.idea[i+1][j-1] == 1:
-        #                 Main.idea[i][j] = 1
-        #             if Main.idea[i+2][j] == 1 and Main.idea[i+3][j] == 1 and Main.idea[i][j+1] == 1 and Main.idea[i+1][j+1] == 1:
-        #                 Main.idea[i+1][j] = 1
                         
         Main.buff = ""
         for i in range(0, H, 2):
@@ -170,35 +180,6 @@ class Main:
                 Main.buff += dot2[Main.idea[i][j]*2+Main.idea[i+1][j]]
             Main.buff +=" \n"
             
-        # for i in range(0, H, 4):
-        #     for j in range(0, W, 2):
-        #         a = Main.idea[i][j] | Main.idea[i+1][j]
-        #         b = Main.idea[i][j+1] | Main.idea[i+1][j+1]
-        #         c = Main.idea[i+2][j] | Main.idea[i+3][j]
-        #         d = Main.idea[i+2][j+1] | Main.idea[i+3][j+1]
-        #         Main.buff += dot4[a*8 + b*4 + c*2 + d*1]
-        #     Main.buff +=" \n"   
-            
-        # for t in range(15):
-        #     for l in range(15):
-        #         count = 0
-        #         count += 1 if Main.dist_point_to_line(l, t, orix, oriy, desx, desy) else -1
-        #         count += 1 if Main.dist_point_to_line(l+1, t, orix, oriy, desx, desy) else -1
-        #         count += 1 if Main.dist_point_to_line(l, t+1, orix, oriy, desx, desy) else -1
-        #         count += 1 if Main.dist_point_to_line(l+1, t+1, orix, oriy, desx, desy) else -1
-                    
-        #         # if count == 4 or count == -4:
-        #         #     Main.buff[t][l] = 0
-        #         # else :
-        #         #     Main.buff[t][l] = 1
-                
-        #         if l == int(orix) and t == int(oriy):
-        #             Main.buff[t][l] = 1
-        #         elif l == int(desx) and t == int(desy):
-        #             Main.buff[t][l] = 1
-        #         else :
-        #             Main.buff[t][l] = 0
-                    
     def dist_point_to_line(x, y, x1, y1, x2, y2):
         distance = (y1-y2)*x + (x2-x1)*y + (x1*y2- x2*y1) / math.sqrt((y2-y1)**2 + (x2-x1)**2);
         return distance
