@@ -1,19 +1,15 @@
 #GUI
-from color import Colors
-from text import dot2
-from text import dot4
 from text import PRND
 
 #module
 from bot import Bot
 from gauge import DialGauge
 from kbmanager import KM
-import keyboard
+from text import replace_str
 
 #program
 import os
 import time
-import math
 import threading
 
 FPS = 20
@@ -21,16 +17,13 @@ FPS = 20
 class Main:
     
     #프로그램 구성 요소 
-    name="ROLLING  BOT"     #프로그램 이름(*짝수길이)
+    name="ROLLING BOT"     #프로그램 이름
     state = 0           #메인루프 동작 상태(0:정상, -1:종료)
     start = 0           #프로그램 시작시간
     time = 0            #프로그램 동작시간
     
     #로봇 관련
     bot = Bot("TEAM 3 BOT")
-    
-    velo = 0
-    velobuff = 0
 
     #프로그램 시작 지점
     @staticmethod
@@ -81,6 +74,7 @@ class Main:
             if KM.is_down('esc'):
                 run = 0
             time.sleep(0.03)
+            
     #**********    UI    *************
     
     #화면 지우기
@@ -99,9 +93,10 @@ class Main:
         Main.time = 0
         curr = 0
         
-        dial = DialGauge("vel",0,135,20,20)
-        accdial = DialGauge("acc",-2,8,20,20,150,5)
-        accdial.set_detail(base_offset=-32)
+        dial = DialGauge("velocity",0,135,20,18)
+        accdial = DialGauge("acc",-2,8,20,18,150,5)
+        dial.set_detail(unit="cm/s")
+        accdial.set_detail(base_offset=-32, unit="cm/s^2")
         
         while Main.state != -1:
             #흐르는 시간 측정
@@ -117,21 +112,24 @@ class Main:
                 Main.show_window()
                 
                 dial.set_val(Main.bot.get_vel())
-                print(dial.show())
-                print(' '*30, int(dial.get_val()),"cm/s")
-                
                 accdial.set_val(Main.bot.get_acc())
-                print(accdial.show())
-                print(' '*30, round(accdial.get_val(),1),"cm/s^2")
-            
+                
+                temp_back_buff = [ " "*80 for _ in range(20)]
+                replace_str(temp_back_buff, dial.show(),0,0)
+                replace_str(temp_back_buff, accdial.show(),40,0)
+                print('\n'.join(temp_back_buff))
+                print("▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁")
+                print("█████████████   ▕")
+                print("▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔")
+                    
+                
     #UI표시
     @staticmethod
     def show_window():
         W = 70
-        T = str(int(Main.time))+'s'+' '*(5-len(str(int(Main.time))))
         gear = Main.bot.gear
         print('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓')
-        print('┃'+' '*((W-len(Main.name))//2)+Main.name+' '*((W-len(Main.name))//2)+'┃')
+        print('┃'+Main.name.center(W)+'┃')
         print('┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫')
         print('┃                                                                      ┃')
         print('┃                                                       ','╭──────────╮',' ┃')
@@ -145,11 +143,6 @@ class Main:
         print('┃                                                       ','╰──────────╯',' ┃')
         print('┃                                                            P R D     ┃')
         print('┃                                                                      ┃')
-        print('┃                                                                      ┃')
-        print('┃                                                                      ┃')
-        print('┃                                                                      ┃')
-        print('┃                                                                      ┃')
-        print('┃                                                                      ┃')
         print('┃  Tilt    0 '+Main.gauge_tilt()+' 150                        ┃')
         print('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛')
 
@@ -162,36 +155,8 @@ class Main:
         return "─"*(mid)+"●"+"─"*(length-mid-1)
     
     def gauge_tilt():
-        return Main.gauge_v(30,0,150,Main.velobuff)
+        return Main.gauge_v(30,0,150,Main.bot.get_vel())
     
-    vel_buff = 0
-    def gauge_vel():
-        Main.vel_buff = Main.tilevel_buffbuff + (Main.time+5-Main.vel_buff)/5
-        return Main.gauge_v(30,0,10,Main.vel_buff)
-    
-    def niddle_gauge(deg, W, H, length):
-        deg = deg%360
-        rad = math.radians(deg)
-        orix, oriy = W/2, H*4/5;
-        desx, desy = orix + length*math.cos(rad) + 0.5, oriy + length*math.sin(rad) + 0.5;
-                 
-        Main.idea = [[0 for _ in range(W+1)] for _ in range(H+1)]
-        rep = 2
-        for i in range(length*rep):
-            x, y = orix + i/rep*math.cos(rad) + 0.5, oriy + i/rep*math.sin(rad) + 0.1;
-            if x < 0 or y < 0 or x > W or y > H :
-                continue 
-            Main.idea[int(y)][int(x)] = 1
-                        
-        Main.buff = ""
-        for i in range(0, H, 2):
-            for j in range(0, W, 1):
-                if i == oriy and j == orix :
-                    Main.buff += Colors.RED+ '▀' +Colors.DEF
-                    continue
-                Main.buff += dot2[Main.idea[i][j]*2+Main.idea[i+1][j]]
-            Main.buff +=" \n"
-
 #프로그램 시작
 if __name__ == "__main__":           
     Main.entry()
