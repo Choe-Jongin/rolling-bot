@@ -6,6 +6,7 @@ from text import PRND
 
 #module
 from bot import Bot
+from gauge import DialGauge
 from kbmanager import KM
 import keyboard
 
@@ -62,18 +63,24 @@ class Main:
         while run == 1:
             KM.update()
             Main.bot.update()
-            if KM.is_down('up'):
-                Main.bot.up_acc(0.5)
+            if KM.is_press('up'):
+                Main.bot.acc = 8
+            elif KM.is_down('up'):
+                Main.bot.up_acc(-0.3)
+                if Main.bot.acc < 0.5:
+                    Main.bot.acc = 0.5
+            elif KM.is_relese('up'):
+                Main.bot.acc = -2
             else :
-                Main.bot.up_acc(-3)
+                if Main.bot.acc > -Main.bot.get_vel():
+                    Main.bot.acc = -Main.bot.get_vel()/20
                 
             if KM.is_press('shift'):
                 Main.bot.gear_select('down')
                 
             if KM.is_down('esc'):
                 run = 0
-            time.sleep(0.1)
-                    
+            time.sleep(0.03)
     #**********    UI    *************
     
     #화면 지우기
@@ -92,6 +99,10 @@ class Main:
         Main.time = 0
         curr = 0
         
+        dial = DialGauge("vel",0,135,20,20)
+        accdial = DialGauge("acc",-2,8,20,20,150,5)
+        accdial.set_detail(base_offset=-32)
+        
         while Main.state != -1:
             #흐르는 시간 측정
             now = time.time()
@@ -104,13 +115,14 @@ class Main:
                 curr -= 1/FPS
                 Main.clear()
                 Main.show_window()
-                    
-                Main.velobuff += (Main.bot.get_vel() - Main.velobuff)/3
-                Main.niddle_gauge(160+Main.velobuff, 30, 20, 15)
                 
-                #velocity
-                print(Main.buff)
-                print(' '*12, int(Main.velobuff),"cm/s")
+                dial.set_val(Main.bot.get_vel())
+                print(dial.show())
+                print(' '*30, int(dial.get_val()),"cm/s")
+                
+                accdial.set_val(Main.bot.get_acc())
+                print(accdial.show())
+                print(' '*30, round(accdial.get_val(),1),"cm/s^2")
             
     #UI표시
     @staticmethod
@@ -179,10 +191,6 @@ class Main:
                     continue
                 Main.buff += dot2[Main.idea[i][j]*2+Main.idea[i+1][j]]
             Main.buff +=" \n"
-            
-    def dist_point_to_line(x, y, x1, y1, x2, y2):
-        distance = (y1-y2)*x + (x2-x1)*y + (x1*y2- x2*y1) / math.sqrt((y2-y1)**2 + (x2-x1)**2);
-        return distance
 
 #프로그램 시작
 if __name__ == "__main__":           
