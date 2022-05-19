@@ -118,6 +118,7 @@ class Main:
                 replace_str(temp_back_buff, dial.show(),0,0)
                 replace_str(temp_back_buff, accdial.show(),40,0)
                 print('\n'.join(temp_back_buff))
+                print("battery 80%")
                 print("▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁")
                 print("█████████████   ▕")
                 print("▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔")
