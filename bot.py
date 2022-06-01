@@ -1,6 +1,6 @@
 from servo import Servo
 from battery import Battery
-
+from gyro import Gyro
 #import analog
 
 class Bot:
@@ -9,7 +9,8 @@ class Bot:
         self.name = name
         
         self.servo = Servo()
-        self.battery = Servo()
+        self.battery = Battery()
+        self.gyro = Gyro()
         
         self.vel = 0
         self.acc = 0
@@ -35,8 +36,11 @@ class Bot:
     def get_acc(self):
         return self.acc
         
-    def get_bat(self):
-        return 40
+    def get_battery_per(self):
+        return self.battery.per()
+        
+    def get_battery_capa(self):
+        return self.battery.capa()
     
     def gear_select(self, dir):
         if dir == 'up':

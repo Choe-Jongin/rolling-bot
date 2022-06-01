@@ -18,3 +18,8 @@ def kpa():     #압력 반환
     press = analogread(PRESS)
     #print('analogread:', str(press) + 'V:'+str(press/4095) + 'KPa:'+str(25*((press/4095)-0.5)))
     return 25*((press*5/4095)-0.5)
+
+def kpa():     #압력 반환   
+    press = analogread(PRESS)
+    #print('analogread:', str(press) + 'V:'+str(press/4095) + 'KPa:'+str(25*((press/4095)-0.5)))
+    return 25*((press*5/4095)-0.5)

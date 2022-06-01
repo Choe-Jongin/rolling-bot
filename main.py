@@ -1,9 +1,12 @@
 #GUI
+import math
+from gyro import Gyro
 from text import PRND
+from text import gauge
 
 #module
 from bot import Bot
-from gauge import DialGauge
+from gauge import DialGauge, Gauge
 from kbmanager import KM
 from text import replace_str
 
@@ -12,7 +15,7 @@ import os
 import time
 import threading
 
-FPS = 20
+FPS = 10
 
 class Main:
     
@@ -21,6 +24,11 @@ class Main:
     state = 0           #메인루프 동작 상태(0:정상, -1:종료)
     start = 0           #프로그램 시작시간
     time = 0            #프로그램 동작시간
+    
+    #UI
+    lines = 25
+    __cleanline = " "*80 
+    back_buff = [ " "*80 for _ in range(lines)]
     
     #로봇 관련
     bot = Bot("TEAM 3 BOT")
@@ -52,6 +60,7 @@ class Main:
     @staticmethod
     def loop():
         
+        #임시 UI 테스트 코드
         run = 1
         while run == 1:
             KM.update()
@@ -85,41 +94,74 @@ class Main:
         else :
             os.system('clear')              #리눅스/유닉스
     
+    #커서이동         
+    @staticmethod
+    def goto00():
+        print("\033[0;0H", end='')
+        
+    
     #UI의 메인루프
     @staticmethod
     def update():
+        
+        Main.clear()
         Main.start = time.time()
         elaps = Main.start
         Main.time = 0
         curr = 0
         
-        dial = DialGauge("velocity",0,135,20,18)
+        veldial = DialGauge("velocity",0,135,20,18)
         accdial = DialGauge("acc",-2,8,20,18,150,5)
-        dial.set_detail(unit="cm/s")
+        veldial.set_detail(unit="cm/s")
         accdial.set_detail(base_offset=-32, unit="cm/s^2")
         
+        battery = Gauge("battery",0,100,delay=3)
+    
         while Main.state != -1:
             #흐르는 시간 측정
             now = time.time()
-            Main.time += now - elaps
+            delta = now - elaps
+            Main.time += delta
             curr += now - elaps
             elaps = now
+            
+            Main.bot.gyro.update(delta)
             
             #FPS 적용(1프레임 마다 진입)
             if curr >= 1/FPS:
                 curr -= 1/FPS
-                Main.clear()
+                Main.goto00()
                 Main.show_window()
                 
-                dial.set_val(Main.bot.get_vel())
+                veldial.set_val(Main.bot.get_vel())
                 accdial.set_val(Main.bot.get_acc())
                 
-                temp_back_buff = [ " "*80 for _ in range(20)]
-                replace_str(temp_back_buff, dial.show(),0,0)
-                replace_str(temp_back_buff, accdial.show(),40,0)
-                print('\n'.join(temp_back_buff))
+                replace_str(Main.back_buff, veldial.show(),0,0)
+                replace_str(Main.back_buff, accdial.show(),40,0)
+                
+                battery.set_val(Main.bot.get_battery_per()*100)
+                # battery.set_val(Main.bot.get_battery_per()*100 + Main.time*10)
+                battery.val_update()
+                
+                for i in range(3):
+                    replace_str(Main.back_buff,["%02d"%round(Main.bot.gyro.get_deg()[i])],i*7,20)
+                for i in range(3):
+                    replace_str(Main.back_buff,["%0.02f"%Main.bot.gyro.get_acc()[i]],i*7,21)
+                # for i in range(3):
+                #     print("% 02.2f"%round(Main.bot.gyro.degs[i],2))
+                
+                
+                print('\n'.join(Main.back_buff))
+                Main.back_buff = [ Main.__cleanline for _ in range(Main.lines)]
+                
+                bat_len = 17
+                bat_per = battery.get_per()*bat_len
+                print( "remain",'%.1f'%(Main.bot.get_battery_per()*100), 'power', Main.bot.battery.power() )
+                bat_end = (int(bat_per*8)%8)
                 print("▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁")
-                print("█████████████   ▕")
+                for i in range(int(bat_per)):
+                    print(gauge[8],end='')
+                print(gauge[bat_end])
                 print("▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔")
                     
                 
