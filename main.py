@@ -1,6 +1,4 @@
 #GUI
-import math
-from gyro import Gyro
 from text import PRND
 from text import gauge
 
@@ -14,6 +12,8 @@ from text import replace_str
 import os
 import time
 import threading
+import RPi.GPIO as GPIO
+
 
 FPS = 10
 
@@ -26,7 +26,7 @@ class Main:
     time = 0            #프로그램 동작시간
     
     #UI
-    lines = 25
+    lines = 24
     __cleanline = " "*80 
     back_buff = [ " "*80 for _ in range(lines)]
     
@@ -38,22 +38,35 @@ class Main:
     def entry():
         
         #setting
-        KM.set_key_list(['up','down','left','right','esc','q', 'shift'])
+        KM.set_key_list(['up','down','left','right','esc','q', 'shift', 'esc'])
+        t1 = threading.Thread(target=Main.update)
+        t2 = threading.Thread(target=KM.detect)
         
         try:
             print('start raspi')
             
             #start monitorig UI
-            t = threading.Thread(target=Main.update)
-            t.start()
+            t1.start()
             
+            #keyboard input
+            t2.start()
+                
             #start main loop
             Main.loop()
             Main.state = -1
+            KM.running = False
         except KeyboardInterrupt:   #키보드로 강제 종료시 진입(ctrl + C)
             print("exit")
         finally:                    #정상/비정상 프로그램 종료 시 처리
+            KM.running = False
+            t1.join()
+            print('system off success')
+            print('press esc')
+            t2.join()
+            Main.bot.close()
             Main.state = -1
+            GPIO.cleanup()
+            Main.clear()
             print("clean main")
     
     #메인루프
@@ -62,26 +75,45 @@ class Main:
         
         #임시 UI 테스트 코드
         run = 1
+        t_ff = 0
         while run == 1:
-            KM.update()
-            Main.bot.update()
-            if KM.is_press('up'):
-                Main.bot.acc = 8
-            elif KM.is_down('up'):
-                Main.bot.up_acc(-0.3)
-                if Main.bot.acc < 0.5:
-                    Main.bot.acc = 0.5
-            elif KM.is_relese('up'):
-                Main.bot.acc = -2
-            else :
-                if Main.bot.acc > -Main.bot.get_vel():
-                    Main.bot.acc = -Main.bot.get_vel()/20
+            # KM.update()
+            # Main.bot.update()
+            # if KM.is_press('up'):
+            #     Main.bot.acc = 8
+            # elif KM.is_down('up'):
+            #     Main.bot.up_acc(-0.3)
+            #     if Main.bot.acc < 0.5:
+            #         Main.bot.acc = 0.5
+            # elif KM.is_relese('up'):
+            #     Main.bot.acc = -2
+            # else :
+            #     if Main.bot.acc > -Main.bot.get_vel():
+            #         Main.bot.acc = -Main.bot.get_vel()/20
                 
-            if KM.is_press('shift'):
-                Main.bot.gear_select('down')
+            # if KM.is_press('shift'):
+            #     Main.bot.gear_select('down')
                 
-            if KM.is_down('esc'):
-                run = 0
+            # if KM.is_down('esc'):
+            #     run = 0
+            
+            if int(Main.time) % 4 == 0 and t_ff == 0 :
+                t_ff = 1
+                Main.bot.set_hor()
+            if int(Main.time) % 4 == 2 and t_ff == 1 :
+                t_ff = 0
+                Main.bot.set_ver() 
+     
+            if(KM.is_press('left')):
+                Main.bot.set_hor()
+            if(KM.is_press('up')):
+                Main.bot.set_neu()
+            if(KM.is_press('right')):
+                Main.bot.set_ver()
+                
+            if(KM.is_press('q')):
+                break;
+            
             time.sleep(0.03)
             
     #**********    UI    *************
