@@ -1,10 +1,6 @@
-
-from email.mime import image
 import math
-from color import Colors
 import text
 from text import dot2
-from text import dot4
 
 #추상화 클래스
 class Gauge:

@@ -10,15 +10,13 @@ class Bot:
         self.name = name
         
         self.battery = Battery()
-        self.gyro = Gyro()
+        #self.gyro = Gyro()
         self.servo1 = Servo(18)
         
         self.vel = 0
         self.acc = 0
         self.gear = 0
-        
         self.set_neu()
-        
         
     def close(self):
         self.servo1.close() 

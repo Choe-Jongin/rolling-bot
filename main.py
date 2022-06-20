@@ -14,7 +14,6 @@ import time
 import threading
 import RPi.GPIO as GPIO
 
-
 FPS = 10
 
 class Main:
@@ -73,17 +72,9 @@ class Main:
     @staticmethod
     def loop():
         
-        #임시 UI 테스트 코드
-        run = 1
-        
-        while run == 1:
+        while True == 1:
             # KM.update()
             Main.bot.update()
-            if KM.is_press('up'):
-                Main.bot.acc += 0.1
-            else :
-                if Main.bot.acc > -Main.bot.get_vel():
-                    Main.bot.acc = -Main.bot.get_vel()/20
                 
             if(KM.is_press('left')):
                 Main.bot.set_ver()
@@ -131,6 +122,7 @@ class Main:
         accdial.set_detail(base_offset=-32, unit="cm/s^2")
         
         tiltgauge = VerGauge("tile",0,120,30,2)
+        servodegdial = DialGauge("servo",0,120,20,17,120,5)
         
         #메인루프
         while Main.state != -1:
@@ -141,15 +133,12 @@ class Main:
             curr += now - elaps
             elaps = now
             
-            Main.bot.gyro.update(delta)
+            #Main.bot.gyro.update(delta)
             
             #FPS 적용(1프레임 마다 진입)
             if curr >= 1/FPS:
                 curr -= 1/FPS
                 Main.goto00()
-
-                tiltgauge.set_val(Main.bot.get_deg())
-                tiltgauge.val_update()
                                 
                 replace_str(Main.back_buff,[
         '┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓',
@@ -167,9 +156,19 @@ class Main:
         '┃                                                              V N H   ┃',
         '┃                                                                      ┃',
         '┃                                                                      ┃',
+        '┃                                                                      ┃',
+        '┃                                                                      ┃',
         '┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'],0,0)
                 
-                replace_str(Main.back_buff, tiltgauge.show(), 2,10)
+
+                tiltgauge.set_val(Main.bot.get_deg())
+                tiltgauge.val_update()
+                replace_str(Main.back_buff, tiltgauge.show(), 2,16)
+                
+                servodegdial.set_val(Main.bot.get_deg())
+                servodegdial.val_update()
+                replace_str(Main.back_buff, servodegdial.show(), 2,3)
+                
                 
                 print('\n'.join(Main.back_buff))
                 Main.back_buff = [ Main.__cleanline for _ in range(Main.lines)]
