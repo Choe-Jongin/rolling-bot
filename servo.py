@@ -6,9 +6,9 @@ class Servo:
     
     def __init__(self, pin):
         self.pin = pin
-        self.duty_min = 2.5
-        self.duty_max = 12
-        self.max = 180
+        self.duty_min = 1.5
+        self.duty_max = 12.5
+        self.max = 120
         self.deg = 0
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(pin, GPIO.OUT)
@@ -34,10 +34,10 @@ class Servo:
 if __name__ == "__main__":           
     s = Servo(18)
     
-    for i in range(2,24):
+    for i in range(2,30):
         
         print(i/2)
         s.pwm.ChangeDutyCycle(i/2)
-        time.sleep(1)
+        time.sleep(0.5)
         
     GPIO.cleanup()

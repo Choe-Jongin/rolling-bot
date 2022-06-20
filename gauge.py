@@ -133,3 +133,21 @@ class DialGauge(Gauge):
             
             #데이터가 저장될 영역
             self.idea = [ [0 for _ in range(self.W)] for _ in range(self.H)]    # 2r by r int array 본질적인 값
+
+
+#수평 게이지
+class VerGauge(Gauge):
+    
+    def __init__(self, name, min, max, length, delay = 1):
+        super().__init__(name,min,max,delay)
+        self.length = length
+        
+    def show(self):
+        mid = int(self.length*self.get_per())
+        if mid < 0 :
+            mid = 0
+        if mid >= self.length:
+            mid = self.length-1
+            
+        restr = self.name+"    "+str(self.min)+" "+"─"*int(mid)+"●"+"─"*int(self.length-mid-1)+ " "+str(self.max)
+        return [restr]

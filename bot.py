@@ -24,14 +24,21 @@ class Bot:
         self.servo1.close() 
         
     def set_ver(self):
+        self.gear = 0;
         self.servo1.set_degree(0)
         
-    def set_hor(self):
-        self.servo1.set_degree(180)
-        
     def set_neu(self):
+        self.gear = 1;
+        self.servo1.set_degree(60)
+        
+    def set_hor(self, deg = 120):
         self.gear = 2;
-        self.servo1.set_degree(90)
+        self.servo1.set_degree(deg)
+        
+    def set_hor_buffered(self):
+        self.gear = 2;
+        self.set_hor(self.servo1.deg+5)
+        
         
     def update(self):
         self.up_speed(self.acc)
@@ -57,6 +64,9 @@ class Bot:
         
     def get_battery_capa(self):
         return self.battery.capa()
+    
+    def get_deg(self):
+        return self.servo1.deg
     
     def gear_select(self, dir):
         if dir == 'up':

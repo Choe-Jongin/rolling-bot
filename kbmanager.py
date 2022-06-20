@@ -1,6 +1,5 @@
 from sshkeyboard import listen_keyboard
 from enum import Enum
-import threading
 
 class key_state(Enum):
     NO      = 0
